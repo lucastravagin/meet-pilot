@@ -1,8 +1,8 @@
 {
   "name": "meet-pilot",
   "productName": "Meet Pilot",
-  "description": "AI-powered meeting copilot for real-time sales coaching and presentation guidance",
-  "keywords": ["meeting", "ai", "copilot", "sales", "coaching"],
+  "description": "Copiloto de reuniões com IA para coaching em tempo real de vendas e apresentações",
+  "keywords": ["reunião", "ia", "copiloto", "vendas", "coaching"],
   "main": "./main.js",
   "version": "1.0.0",
   "author": "lucas travagin",

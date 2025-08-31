@@ -9,9 +9,9 @@ initAudioLoopback();
 
 function createWindow() {
   const mainWindow = new BrowserWindow({
-    width: 650,
-    height: 600,
-    title: 'Mic & Speaker Streamer',
+    width: 1400,
+    height: 900,
+    title: 'Meet Pilot - Copiloto de Reuniões com IA',
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
       webSecurity: false

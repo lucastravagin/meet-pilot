@@ -247,6 +247,246 @@ class WavRecorder {
     }
 }
 
+// AI Analysis System
+class AICoach {
+    constructor(apiKey) {
+        this.apiKey = apiKey;
+        this.conversationBuffer = [];
+        this.analysisTimer = null;
+        this.lastAnalysis = 0;
+        this.analysisInterval = 10000; // Analyze every 10 seconds
+        this.suggestions = [];
+        this.isAnalyzing = false;
+    }
+
+    addTranscription(source, text, timestamp) {
+        if (!text || text === '...') return;
+        
+        this.conversationBuffer.push({
+            source, // 'user' or 'meeting'
+            text,
+            timestamp: timestamp || new Date().toISOString()
+        });
+
+        // Keep only last 2 minutes of conversation
+        const cutoff = Date.now() - (2 * 60 * 1000);
+        this.conversationBuffer = this.conversationBuffer.filter(
+            item => new Date(item.timestamp).getTime() > cutoff
+        );
+
+        // Trigger analysis if enough time has passed
+        if (Date.now() - this.lastAnalysis > this.analysisInterval) {
+            this.analyzeConversation();
+        }
+    }
+
+    async analyzeConversation() {
+        if (this.isAnalyzing || this.conversationBuffer.length < 3) return;
+        
+        this.isAnalyzing = true;
+        this.lastAnalysis = Date.now();
+        
+        try {
+            updateAIStatus('Analisando conversa...');
+            
+            const context = this.buildAnalysisContext();
+            const analysis = await this.callOpenAIAnalysis(context);
+            
+            if (analysis && analysis.suggestions) {
+                this.processSuggestions(analysis.suggestions);
+            }
+            
+            updateAIStatus('Pronto para ajudar');
+        } catch (error) {
+            console.error('AI Analysis error:', error);
+            updateAIStatus('Erro na análise - tentando novamente...');
+        } finally {
+            this.isAnalyzing = false;
+        }
+    }
+
+    buildAnalysisContext() {
+        const recentConversation = this.conversationBuffer
+            .slice(-10) // Last 10 exchanges
+            .map(item => `[${item.source.toUpperCase()}]: ${item.text}`)
+            .join('\n');
+
+        return {
+            conversation: recentConversation,
+            timestamp: new Date().toISOString(),
+            bufferSize: this.conversationBuffer.length
+        };
+    }
+
+    async callOpenAIAnalysis(context) {
+        const prompt = this.buildAnalysisPrompt(context);
+        
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${this.apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                model: 'gpt-4o-mini',
+                messages: [
+                    {
+                        role: 'system',
+                        content: `Você é um copiloto de reuniões com IA que fornece coaching em tempo real para chamadas de vendas e apresentações. 
+                        
+                        Analise a conversa e forneça 1-3 sugestões curtas e acionáveis para ajudar o usuário a melhorar sua performance.
+                        
+                        Foque em:
+                        - Identificar objeções e sugerir respostas
+                        - Reconhecer sinais de compra e próximos passos
+                        - Melhorar engajamento e fluxo da conversa
+                        - Sugerir perguntas relevantes ou demonstrações
+                        - Recomendações de timing
+                        
+                        Responda APENAS com JSON válido neste formato exato:
+                        {
+                          "suggestions": [
+                            {
+                              "type": "objection|opportunity|engagement|next_step",
+                              "text": "Sugestão acionável curta (máx 60 chars)",
+                              "priority": "high|medium|low",
+                              "context": "Breve explicação do porquê esta sugestão é relevante"
+                            }
+                          ]
+                        }`
+                    },
+                    {
+                        role: 'user',
+                        content: prompt
+                    }
+                ],
+                max_tokens: 300,
+                temperature: 0.7
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error(`OpenAI API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices[0]?.message?.content;
+        
+        if (!content) {
+            throw new Error('No content in OpenAI response');
+        }
+
+        try {
+            return JSON.parse(content);
+        } catch (parseError) {
+            console.error('Failed to parse OpenAI response:', content);
+            throw new Error('Invalid JSON response from OpenAI');
+        }
+    }
+
+    buildAnalysisPrompt(context) {
+        return `Conversa recente:
+${context.conversation}
+
+Horário atual: ${context.timestamp}
+Tamanho do buffer: ${context.bufferSize} mensagens
+
+Analise esta conversa e forneça sugestões de coaching para o usuário melhorar sua performance na reunião.`;
+    }
+
+    processSuggestions(suggestions) {
+        // Clear old suggestions
+        this.suggestions = [];
+        
+        // Add new suggestions with timestamps
+        suggestions.forEach(suggestion => {
+            const enrichedSuggestion = {
+                ...suggestion,
+                id: Date.now() + Math.random(),
+                timestamp: new Date().toISOString(),
+                displayed: false
+            };
+            this.suggestions.push(enrichedSuggestion);
+        });
+
+        // Display suggestions in UI
+        this.displaySuggestions();
+    }
+
+    displaySuggestions() {
+        const container = document.getElementById('suggestionsContainer');
+        if (!container) return;
+
+        // Clear waiting message
+        container.innerHTML = '';
+
+        this.suggestions.forEach((suggestion, index) => {
+            if (suggestion.displayed) return;
+            
+            setTimeout(() => {
+                this.createSuggestionCard(suggestion, container);
+                suggestion.displayed = true;
+            }, index * 500); // Stagger animations
+        });
+    }
+
+    createSuggestionCard(suggestion, container) {
+        const card = document.createElement('div');
+        card.className = 'suggestion-card';
+        card.dataset.suggestionId = suggestion.id;
+
+        const typeColors = {
+            objection: '#EF4444',
+            opportunity: '#10B981', 
+            engagement: '#3B82F6',
+            next_step: '#A259FF'
+        };
+
+        const typeIcons = {
+            objection: '⚠️',
+            opportunity: '💡',
+            engagement: '🎯',
+            next_step: '→'
+        };
+
+        const typeLabels = {
+            objection: 'Objeção',
+            opportunity: 'Oportunidade',
+            engagement: 'Engajamento',
+            next_step: 'Próximo Passo'
+        };
+
+        card.innerHTML = `
+            <div class="suggestion-type" style="color: ${typeColors[suggestion.type] || '#A259FF'}">
+                ${typeIcons[suggestion.type] || '💡'} ${typeLabels[suggestion.type] || suggestion.type}
+            </div>
+            <div class="suggestion-text">${suggestion.text}</div>
+            <div class="suggestion-context" style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 1rem;">
+                ${suggestion.context}
+            </div>
+            <div class="suggestion-actions">
+                <button class="btn-small" onclick="copySuggestion('${suggestion.id}')">Copiar</button>
+                <button class="btn-small" onclick="dismissSuggestion('${suggestion.id}')">Dispensar</button>
+            </div>
+        `;
+
+        container.appendChild(card);
+
+        // Auto-remove after 12 seconds
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    if (card.parentNode) {
+                        card.parentNode.removeChild(card);
+                    }
+                }, 300);
+            }
+        }, 12000);
+    }
+}
+
 // Global variables
 let microphoneSession = null;
 let systemAudioSession = null;
@@ -257,6 +497,7 @@ let systemAudioVadTime = 0;
 let wavRecorder = new WavRecorder();
 let microphoneStream = null;
 let systemAudioStream = null;
+let aiCoach = null;
 
 // DOM elements
 const micResults = document.getElementById('micResults');
@@ -269,6 +510,46 @@ const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const recordBtn = document.getElementById('recordBtn');
 const modelSelect = document.getElementById('modelSelect');
+const aiStatus = document.getElementById('aiStatus');
+const suggestionsContainer = document.getElementById('suggestionsContainer');
+
+// Utility functions
+function updateAIStatus(status) {
+    if (aiStatus) {
+        aiStatus.textContent = status;
+    }
+}
+
+function copySuggestion(suggestionId) {
+    const card = document.querySelector(`[data-suggestion-id="${suggestionId}"]`);
+    if (card) {
+        const text = card.querySelector('.suggestion-text').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+            // Visual feedback
+            const btn = card.querySelector('button');
+            const originalText = btn.textContent;
+            btn.textContent = 'Copiado!';
+            btn.style.background = 'var(--success)';
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '';
+            }, 1000);
+        });
+    }
+}
+
+function dismissSuggestion(suggestionId) {
+    const card = document.querySelector(`[data-suggestion-id="${suggestionId}"]`);
+    if (card) {
+        card.style.opacity = '0';
+        card.style.transform = 'translateY(-10px)';
+        setTimeout(() => {
+            if (card.parentNode) {
+                card.parentNode.removeChild(card);
+            }
+        }, 300);
+    }
+}
 
 // Configuration
 const CONFIG = {
@@ -299,14 +580,14 @@ function updateMicSelect() {
 // Update status display
 function updateStatus(streamType, isConnected) {
     const statusElement = streamType === 'microphone' ? micStatus : speakerStatus;
-    const label = streamType === 'microphone' ? 'Microphone' : 'System Audio';
+    const statusCard = statusElement;
 
     if (isConnected) {
-        statusElement.textContent = `${label}: Connected`;
-        statusElement.className = 'status connected';
+        statusCard.className = 'status-card connected';
+        statusCard.querySelector('.status-value').textContent = 'Conectado';
     } else {
-        statusElement.textContent = `${label}: Disconnected`;
-        statusElement.className = 'status disconnected';
+        statusCard.className = 'status-card disconnected';
+        statusCard.querySelector('.status-value').textContent = 'Desconectado';
     }
 }
 
@@ -392,10 +673,17 @@ function handleMicrophoneTranscript(transcript) {
     }
 
     const timestamp = new Date().toLocaleTimeString();
-    const prefix = transcript.partial ? '' : `[${timestamp}]`;
+    const prefix = transcript.partial ? '' : `[${timestamp}] `;
 
-    micResults.textContent += `${prefix} ${text}\n`;
-    micResults.scrollTop = micResults.scrollHeight;
+    if (!transcript.partial) {
+        micResults.textContent += `${prefix}${text}\n`;
+        micResults.scrollTop = micResults.scrollHeight;
+        
+        // Send to AI Coach for analysis
+        if (aiCoach && text.trim() !== '...') {
+            aiCoach.addTranscription('user', text, new Date().toISOString());
+        }
+    }
 }
 
 // Handle system audio transcript updates
@@ -406,10 +694,17 @@ function handleSystemAudioTranscript(transcript) {
     }
 
     const timestamp = new Date().toLocaleTimeString();
-    const prefix = transcript.partial ? '' : `[${timestamp}]`;
+    const prefix = transcript.partial ? '' : `[${timestamp}] `;
 
-    speakerResults.textContent += `${prefix} ${text}\n`;
-    speakerResults.scrollTop = speakerResults.scrollHeight;
+    if (!transcript.partial) {
+        speakerResults.textContent += `${prefix}${text}\n`;
+        speakerResults.scrollTop = speakerResults.scrollHeight;
+        
+        // Send to AI Coach for analysis
+        if (aiCoach && text.trim() !== '...') {
+            aiCoach.addTranscription('meeting', text, new Date().toISOString());
+        }
+    }
 }
 
 // Handle errors
@@ -425,6 +720,12 @@ async function start() {
         startBtn.disabled = true;
         stopBtn.disabled = false;
         modelSelect.disabled = true;
+
+        // Initialize AI Coach
+        if (!aiCoach) {
+            aiCoach = new AICoach(window.electronAPI.apiKey);
+        }
+        updateAIStatus('Inicializando...');
 
         // Get microphone stream
         microphoneStream = await navigator.mediaDevices.getUserMedia({
@@ -490,11 +791,12 @@ async function start() {
 
         // Enable record button
         recordBtn.disabled = false;
+        updateAIStatus('Ouvindo e pronto para dar dicas');
         console.log('Transcription started for both streams');
 
     } catch (error) {
         console.error('Error starting transcription:', error);
-        alert('Error starting transcription: ' + error.message);
+        alert('Erro ao iniciar transcrição: ' + error.message);
         stop();
     }
 }
@@ -505,6 +807,18 @@ function stop() {
     stopBtn.disabled = true;
     recordBtn.disabled = true;
     modelSelect.disabled = false;
+
+    // Stop AI Coach
+    if (aiCoach) {
+        aiCoach.conversationBuffer = [];
+        aiCoach.suggestions = [];
+    }
+    updateAIStatus('Sessão encerrada');
+    
+    // Clear suggestions
+    if (suggestionsContainer) {
+        suggestionsContainer.innerHTML = '<div class="waiting-message">Inicie sua sessão de reunião para receber sugestões de coaching com IA</div>';
+    }
 
     // Stop recording if active
     if (wavRecorder.isRecording) {
@@ -531,20 +845,22 @@ function stop() {
     updateRecordStatus(false);
 
     const timestamp = new Date().toLocaleTimeString();
-    micResults.textContent = `[${timestamp}] Waiting for microphone input...\n`;
-    speakerResults.textContent = `[${timestamp}] Waiting for system audio...\n`;
+    micResults.textContent = `[${timestamp}] Aguardando entrada do microfone...\n`;
+    speakerResults.textContent = `[${timestamp}] Aguardando áudio da reunião...\n`;
 }
 
 // Update record status display
 function updateRecordStatus(isRecording) {
+    const statusCard = recordStatus;
+    
     if (isRecording) {
-        recordStatus.textContent = 'Recording: Active';
-        recordStatus.className = 'status connected';
-        recordBtn.textContent = 'Stop Recording';
+        statusCard.className = 'status-card connected';
+        statusCard.querySelector('.status-value').textContent = 'Gravando';
+        recordBtn.textContent = 'Parar Gravação';
     } else {
-        recordStatus.textContent = 'Recording: Stopped';
-        recordStatus.className = 'status disconnected';
-        recordBtn.textContent = 'Start Recording';
+        statusCard.className = 'status-card disconnected';  
+        statusCard.querySelector('.status-value').textContent = 'Parada';
+        recordBtn.textContent = 'Iniciar Gravação';
     }
 }
 
@@ -556,7 +872,7 @@ async function toggleRecording() {
             updateRecordStatus(true);
         } catch (error) {
             console.error('Error starting recording:', error);
-            alert('Error starting recording: ' + error.message);
+            alert('Erro ao iniciar gravação: ' + error.message);
         }
     } else {
         wavRecorder.stopRecording();
