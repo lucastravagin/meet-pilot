@@ -16,14 +16,17 @@
     "start": "electron ."
   },
   "dependencies": {
+    "better-sqlite3": "^12.2.0",
     "dotenv": "^17.2.0",
     "electron-audio-loopback": "^1.0.5",
     "fuse.js": "^7.0.0",
     "mammoth": "^1.6.0",
-    "pdf-parse": "^1.1.1"
+    "pdf-parse": "^1.1.1",
+    "uuid": "^11.1.0"
   },
   "devDependencies": {
     "electron": "35.0.0",
+    "electron-rebuild": "^3.2.9",
     "tailwindcss": "^4.1.12"
   }
 }
