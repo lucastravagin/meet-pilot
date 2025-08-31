@@ -18,7 +18,8 @@ function createWindow() {
     }
   })
 
-  mainWindow.loadFile('index.html')
+  // Start with configuration screen
+  mainWindow.loadFile('config.html')
 }
 
 app.whenReady().then(() => {

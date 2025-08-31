@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <title>Meet Pilot - Sessão Ativa</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <div class="container session-layout">
+    <!-- Session Header -->
+    <div class="session-header">
+      <div class="session-info">
+        <h1>Meet Pilot</h1>
+        <p class="session-title" id="sessionTitle">Sessão Ativa</p>
+      </div>
+
+      <div class="session-controls">
+        <div class="control-group">
+          <label class="control-label">Ação</label>
+          <button id="startBtn" type="button">Iniciar Sessão</button>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Gravação</label>
+          <button id="recordBtn" type="button" disabled>Iniciar Gravação</button>
+        </div>
+        <div class="control-group">
+          <label class="control-label">Gravação</label>
+          <button id="stopBtn" type="button" class="btn-danger" disabled>Parar Sessão</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="session-content">
+      <!-- Left Column - Audio Transcription -->
+      <div class="audio-panel">
+        <div class="transcription-section">
+          <div class="section-header">
+            <div class="section-icon">🎤</div>
+            <div class="section-title">Sua Voz</div>
+          </div>
+          <div class="transcription-box" id="micResults">Aguardando entrada do microfone...</div>
+        </div>
+
+        <div class="transcription-section">
+          <div class="section-header">
+            <div class="section-icon">🔊</div>
+            <div class="section-title">Áudio da Reunião</div>
+          </div>
+          <div class="transcription-box" id="speakerResults">Aguardando áudio do sistema...</div>
+        </div>
+
+        <!-- Status Grid -->
+        <div class="status-grid">
+          <div id="micStatus" class="status-card disconnected">
+            <div class="status-label">Microfone</div>
+            <div class="status-value">Desconectado</div>
+          </div>
+          <div id="speakerStatus" class="status-card disconnected">
+            <div class="status-label">Áudio do Sistema</div>
+            <div class="status-value">Desconectado</div>
+          </div>
+          <div id="recordStatus" class="status-card disconnected">
+            <div class="status-label">Gravação</div>
+            <div class="status-value">Parada</div>
+          </div>
+        </div>
+
+        <!-- Hidden controls for compatibility -->
+        <div style="display: none;">
+          <select id="micSelect"></select>
+          <select id="modelSelect">
+            <option value="whisper-1">Whisper-1</option>
+            <option value="gpt-4o-transcribe">GPT-4o Transcrição</option>
+            <option value="gpt-4o-mini-transcribe">GPT-4o Mini</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Right Column - AI Coach -->
+      <div class="ai-panel">
+        <div class="ai-insights">
+          <div class="ai-header">
+            <div class="ai-icon">🧠</div>
+            <div>
+              <div class="ai-title">Coach de IA</div>
+              <div class="ai-status" id="aiStatus">Pronto para ajudar</div>
+            </div>
+          </div>
+
+          <div class="suggestions-container" id="suggestionsContainer">
+            <div class="waiting-message">
+              Inicie sua sessão para receber sugestões de coaching com IA
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Hidden elements for compatibility -->
+    <div style="display: none;">
+      <div id="playbookPanel"></div>
+      <div id="playbookStatus"></div>
+      <button id="uploadBtn"></button>
+      <input id="fileInput" type="file">
+      <div id="uploadSection"></div>
+      <div id="supportedTypes"></div>
+      <div id="maxSize"></div>
+      <div id="documentsList"></div>
+      <div id="objections-count"></div>
+      <div id="scripts-count"></div>
+      <div id="cases-count"></div>
+      <div id="questions-count"></div>
+    </div>
+  </div>
+
+  <script src="./renderer.js"></script>
+</body>
+
+</html>

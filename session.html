@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Pilot - Sessão Ativa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-purple': '#A259FF',
+                        'soft-purple': '#C084FC',
+                        'deep-purple': '#6D28D9',
+                        'dark-bg': '#0D0D0D',
+                        'dark-card': '#1A1A1A',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(162, 89, 255, 0.3);
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #2D1B69 100%);
+        }
+        .pulse-recording {
+            animation: pulse-recording 1.5s infinite;
+        }
+        @keyframes pulse-recording {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.8);
+                transform: scale(1.02);
+            }
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen font-system text-white">
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 opacity-20">
+        <div class="absolute top-20 left-20 w-72 h-72 bg-neon-purple rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div class="absolute bottom-20 right-20 w-72 h-72 bg-soft-purple rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+    </div>
+
+    <div class="relative z-10 flex flex-col h-screen">
+        <!-- Header with Session Info -->
+        <header class="p-6 border-b border-white/10">
+            <div class="flex justify-between items-center max-w-7xl mx-auto">
+                <div class="flex items-center space-x-4">
+                    <button onclick="goToConfig()" class="bg-white/10 hover:bg-white/20 text-white p-2 rounded-lg transition-all duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                        </svg>
+                    </button>
+                    <div>
+                        <h1 class="text-xl font-bold text-neon-purple">Meet Pilot</h1>
+                        <p id="sessionTitle" class="text-sm text-gray-300">Sessão Ativa</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Session Controls -->
+                    <button id="recordBtn" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-2 px-6 rounded-lg transition-all duration-300 flex items-center disabled:opacity-50">
+                        <span class="w-2 h-2 bg-white rounded-full mr-2"></span>
+                        <span id="recordBtnText">Iniciar Gravação</span>
+                    </button>
+                    
+                    <button id="stopBtn" class="bg-gray-600 hover:bg-gray-700 text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 disabled:opacity-50" disabled>
+                        Finalizar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex overflow-hidden">
+            <!-- Transcription Panel -->
+            <div class="flex-1 flex flex-col p-6">
+                <div class="glass-panel rounded-2xl p-6 flex-1 flex flex-col">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <span class="text-2xl mr-3">📝</span>
+                            Transcrição ao Vivo
+                        </h2>
+                        
+                        <div class="flex items-center space-x-4 text-sm text-gray-300">
+                            <div class="flex items-center">
+                                <div id="connectionIndicator" class="w-2 h-2 bg-red-400 rounded-full mr-2"></div>
+                                <span id="connectionText">Desconectado</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div id="recordingIndicator" class="w-2 h-2 bg-gray-400 rounded-full mr-2"></div>
+                                <span id="recordingText">Parado</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Transcript Container -->
+                    <div id="transcript" class="flex-1 overflow-y-auto space-y-4 p-4 bg-black/20 rounded-xl">
+                        <div class="text-center text-gray-400 py-8">
+                            <div class="text-4xl mb-2">🎤</div>
+                            <p>Aguardando transcrição...</p>
+                            <p class="text-sm mt-1">Inicie a gravação para começar</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div class="mt-4 flex justify-between items-center">
+                        <div class="flex space-x-2">
+                            <button id="clearBtn" class="bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-4 rounded-lg transition-all duration-300">
+                                Limpar
+                            </button>
+                            <button id="exportBtn" class="bg-white/10 hover:bg-white/20 text-white text-sm py-2 px-4 rounded-lg transition-all duration-300">
+                                Exportar
+                            </button>
+                        </div>
+                        
+                        <div id="sessionStats" class="text-sm text-gray-400">
+                            <span id="entryCount">0 entradas</span> • 
+                            <span id="sessionDuration">0min</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Coach Panel -->
+            <div class="w-96 p-6 border-l border-white/10">
+                <div class="glass-panel rounded-2xl p-6 h-full flex flex-col">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold flex items-center">
+                            <span class="text-2xl mr-3">🧠</span>
+                            Coach IA
+                        </h2>
+                        
+                        <div id="coachMood" class="text-2xl">😐</div>
+                    </div>
+                    
+                    <!-- Coach Status -->
+                    <div class="mb-4 p-3 bg-white/5 rounded-lg">
+                        <div class="text-xs text-gray-400 uppercase tracking-wide mb-1">Status</div>
+                        <div id="coachStatus" class="text-sm text-neon-purple">Aguardando conversa...</div>
+                    </div>
+                    
+                    <!-- Suggestions Container -->
+                    <div class="flex-1 overflow-y-auto">
+                        <div id="coachSuggestions" class="space-y-4">
+                            <div class="text-center text-gray-400 py-8">
+                                <div class="text-3xl mb-2">💡</div>
+                                <p class="text-sm">Sugestões aparecerão aqui</p>
+                                <p class="text-xs mt-1">quando a conversa começar</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Manual Analysis -->
+                    <div class="mt-4 pt-4 border-t border-white/10">
+                        <button id="analyzeBtn" class="w-full bg-neon-purple hover:bg-soft-purple text-white font-medium py-2 px-4 rounded-lg transition-all duration-300 text-sm">
+                            Analisar Agora
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Session management
+        let sessionConfig = null;
+        let sessionStartTime = null;
+        let entryCount = 0;
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadSessionConfig();
+            setupEventListeners();
+            updateSessionDisplay();
+        });
+
+        function loadSessionConfig() {
+            const saved = localStorage.getItem('meetPilotSessionConfig');
+            if (saved) {
+                try {
+                    sessionConfig = JSON.parse(saved);
+                    document.getElementById('sessionTitle').textContent = sessionConfig.sessionName || 'Sessão Ativa';
+                } catch (error) {
+                    console.error('Error loading session config:', error);
+                }
+            }
+        }
+
+        function setupEventListeners() {
+            document.getElementById('recordBtn').addEventListener('click', toggleRecording);
+            document.getElementById('stopBtn').addEventListener('click', stopSession);
+            document.getElementById('clearBtn').addEventListener('click', clearTranscript);
+            document.getElementById('exportBtn').addEventListener('click', exportSession);
+            document.getElementById('analyzeBtn').addEventListener('click', analyzeNow);
+        }
+
+        function toggleRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordBtnText = document.getElementById('recordBtnText');
+            const isRecording = recordBtn.classList.contains('recording');
+
+            if (!isRecording) {
+                // Start recording
+                startRecording();
+            } else {
+                // Stop recording
+                stopRecording();
+            }
+        }
+
+        function startRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordBtnText = document.getElementById('recordBtnText');
+            const stopBtn = document.getElementById('stopBtn');
+
+            recordBtn.classList.add('recording', 'pulse-recording');
+            recordBtnText.textContent = 'Parar Gravação';
+            stopBtn.disabled = false;
+
+            updateRecordingStatus(true);
+            updateConnectionStatus(true);
+
+            if (!sessionStartTime) {
+                sessionStartTime = new Date();
+                startSessionTimer();
+            }
+
+            // Simulate transcript entries for demo
+            simulateTranscript();
+        }
+
+        function stopRecording() {
+            const recordBtn = document.getElementById('recordBtn');
+            const recordBtnText = document.getElementById('recordBtnText');
+
+            recordBtn.classList.remove('recording', 'pulse-recording');
+            recordBtnText.textContent = 'Iniciar Gravação';
+
+            updateRecordingStatus(false);
+        }
+
+        function stopSession() {
+            stopRecording();
+            updateConnectionStatus(false);
+            
+            if (confirm('Finalizar sessão? Você será redirecionado para as configurações.')) {
+                goToConfig();
+            }
+        }
+
+        function clearTranscript() {
+            if (confirm('Limpar toda a transcrição? Esta ação não pode ser desfeita.')) {
+                document.getElementById('transcript').innerHTML = `
+                    <div class="text-center text-gray-400 py-8">
+                        <div class="text-4xl mb-2">🎤</div>
+                        <p>Aguardando transcrição...</p>
+                        <p class="text-sm mt-1">Inicie a gravação para começar</p>
+                    </div>
+                `;
+                entryCount = 0;
+                updateSessionStats();
+            }
+        }
+
+        function exportSession() {
+            const transcript = document.getElementById('transcript');
+            const content = transcript.innerText;
+            
+            const sessionData = {
+                sessionName: sessionConfig?.sessionName || 'Sessão Meet Pilot',
+                startTime: sessionStartTime?.toISOString(),
+                endTime: new Date().toISOString(),
+                content: content,
+                entryCount: entryCount
+            };
+
+            const blob = new Blob([JSON.stringify(sessionData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `sessao-${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            URL.revokeObjectURL(url);
+        }
+
+        function analyzeNow() {
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const originalText = analyzeBtn.textContent;
+            
+            analyzeBtn.textContent = 'Analisando...';
+            analyzeBtn.disabled = true;
+            
+            // Simulate analysis
+            setTimeout(() => {
+                addCoachSuggestion({
+                    type: 'suggestion',
+                    priority: 'média',
+                    text: 'Considere fazer uma pergunta de descoberta para entender melhor as necessidades do cliente.',
+                    action: 'Pergunte: "Qual é o maior desafio que vocês enfrentam atualmente?"'
+                });
+                
+                analyzeBtn.textContent = originalText;
+                analyzeBtn.disabled = false;
+            }, 2000);
+        }
+
+        function updateRecordingStatus(isRecording) {
+            const indicator = document.getElementById('recordingIndicator');
+            const text = document.getElementById('recordingText');
+            
+            if (isRecording) {
+                indicator.className = 'w-2 h-2 bg-red-400 rounded-full mr-2 animate-pulse';
+                text.textContent = 'Gravando';
+            } else {
+                indicator.className = 'w-2 h-2 bg-gray-400 rounded-full mr-2';
+                text.textContent = 'Parado';
+            }
+        }
+
+        function updateConnectionStatus(isConnected) {
+            const indicator = document.getElementById('connectionIndicator');
+            const text = document.getElementById('connectionText');
+            
+            if (isConnected) {
+                indicator.className = 'w-2 h-2 bg-green-400 rounded-full mr-2';
+                text.textContent = 'Conectado';
+            } else {
+                indicator.className = 'w-2 h-2 bg-red-400 rounded-full mr-2';
+                text.textContent = 'Desconectado';
+            }
+        }
+
+        function startSessionTimer() {
+            setInterval(updateSessionStats, 1000);
+        }
+
+        function updateSessionStats() {
+            const entryCountEl = document.getElementById('entryCount');
+            const durationEl = document.getElementById('sessionDuration');
+            
+            entryCountEl.textContent = `${entryCount} entradas`;
+            
+            if (sessionStartTime) {
+                const duration = Math.floor((new Date() - sessionStartTime) / 1000 / 60);
+                durationEl.textContent = `${duration}min`;
+            }
+        }
+
+        function addTranscriptEntry(speaker, text) {
+            const transcript = document.getElementById('transcript');
+            
+            // Remove placeholder if exists
+            if (transcript.children.length === 1 && transcript.children[0].classList.contains('text-center')) {
+                transcript.innerHTML = '';
+            }
+            
+            const entry = document.createElement('div');
+            entry.className = 'transcript-entry p-4 bg-white/5 rounded-lg border-l-4 border-neon-purple';
+            
+            const time = new Date().toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            
+            entry.innerHTML = `
+                <div class="flex justify-between items-center mb-2">
+                    <span class="font-semibold text-neon-purple">${speaker}</span>
+                    <span class="text-xs text-gray-400">${time}</span>
+                </div>
+                <div class="text-white">${text}</div>
+            `;
+            
+            transcript.appendChild(entry);
+            transcript.scrollTop = transcript.scrollHeight;
+            
+            entryCount++;
+            updateSessionStats();
+        }
+
+        function addCoachSuggestion(suggestion) {
+            const container = document.getElementById('coachSuggestions');
+            
+            // Remove placeholder if exists
+            if (container.children.length === 1 && container.children[0].classList.contains('text-center')) {
+                container.innerHTML = '';
+            }
+            
+            const suggestionEl = document.createElement('div');
+            suggestionEl.className = 'suggestion p-4 bg-white/5 rounded-lg border-l-4';
+            
+            // Set border color based on priority
+            const borderColors = {
+                'alta': 'border-red-400',
+                'média': 'border-yellow-400',
+                'baixa': 'border-green-400'
+            };
+            
+            suggestionEl.classList.add(borderColors[suggestion.priority] || 'border-neon-purple');
+            
+            suggestionEl.innerHTML = `
+                <div class="text-sm font-medium text-white mb-2">${suggestion.text}</div>
+                ${suggestion.action ? `<div class="text-xs text-gray-300 italic">💡 ${suggestion.action}</div>` : ''}
+                <div class="text-xs text-gray-400 mt-2">${new Date().toLocaleTimeString('pt-BR')}</div>
+            `;
+            
+            container.appendChild(suggestionEl);
+            container.scrollTop = container.scrollHeight;
+            
+            // Update coach status
+            document.getElementById('coachStatus').textContent = 'Nova sugestão disponível';
+        }
+
+        function goToConfig() {
+            window.location.href = 'config.html';
+        }
+
+        // Demo function to simulate transcript
+        function simulateTranscript() {
+            const demoEntries = [
+                { speaker: 'Usuário', text: 'Olá Dr. João, como está? Obrigado por me receber hoje.' },
+                { speaker: 'Dr. João', text: 'Olá! Muito bem, obrigado. Fico feliz em conversar sobre nossa proposta.' },
+                { speaker: 'Usuário', text: 'Perfeito. Gostaria de entender melhor quais são os principais desafios que vocês enfrentam atualmente.' }
+            ];
+            
+            let index = 0;
+            const addEntry = () => {
+                if (index < demoEntries.length) {
+                    const entry = demoEntries[index];
+                    addTranscriptEntry(entry.speaker, entry.text);
+                    
+                    // Add coach suggestion after user speaks
+                    if (entry.speaker === 'Usuário' && index === 2) {
+                        setTimeout(() => {
+                            addCoachSuggestion({
+                                type: 'suggestion',
+                                priority: 'média',
+                                text: 'Excelente pergunta de descoberta! Continue explorando os desafios específicos.',
+                                action: 'Aprofunde: "Pode me contar mais sobre como isso impacta o dia a dia da equipe?"'
+                            });
+                        }, 1000);
+                    }
+                    
+                    index++;
+                    if (index < demoEntries.length) {
+                        setTimeout(addEntry, 3000 + Math.random() * 2000);
+                    }
+                }
+            };
+            
+            setTimeout(addEntry, 2000);
+        }
+
+        function updateSessionDisplay() {
+            // Load initial state
+            updateConnectionStatus(false);
+            updateRecordingStatus(false);
+            updateSessionStats();
+        }
+    </script>
+</body>
+</html>

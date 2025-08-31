@@ -2,7 +2,13 @@
   "name": "meet-pilot",
   "productName": "Meet Pilot",
   "description": "Copiloto de reuniões com IA para coaching em tempo real de vendas e apresentações",
-  "keywords": ["reunião", "ia", "copiloto", "vendas", "coaching"],
+  "keywords": [
+    "reunião",
+    "ia",
+    "copiloto",
+    "vendas",
+    "coaching"
+  ],
   "main": "./main.js",
   "version": "1.0.0",
   "author": "lucas travagin",
@@ -12,11 +18,12 @@
   "dependencies": {
     "dotenv": "^17.2.0",
     "electron-audio-loopback": "^1.0.5",
-    "pdf-parse": "^1.1.1",
+    "fuse.js": "^7.0.0",
     "mammoth": "^1.6.0",
-    "fuse.js": "^7.0.0"
+    "pdf-parse": "^1.1.1"
   },
   "devDependencies": {
-    "electron": "35.0.0"
+    "electron": "35.0.0",
+    "tailwindcss": "^4.1.12"
   }
 }

@@ -549,3 +549,138 @@ button:disabled {
   background: rgba(255, 255, 255, 0.05);
   border-radius: var(--border-radius);
 }
+
+/* Session Layout Styles */
+.session-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  padding: 1rem;
+  gap: 1rem;
+}
+
+.session-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-xl);
+  padding: 1.5rem 2rem;
+  box-shadow: var(--shadow-glow);
+}
+
+.session-info h1 {
+  font-size: 1.5rem;
+  margin-bottom: 0.25rem;
+  text-align: left;
+}
+
+.session-title {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.session-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.session-controls .control-group {
+  min-width: auto;
+}
+
+.session-controls button {
+  padding: 0.75rem 1.25rem;
+  font-size: 0.875rem;
+  white-space: nowrap;
+}
+
+.session-content {
+  display: grid;
+  grid-template-columns: 1fr 400px;
+  gap: 1rem;
+  flex: 1;
+}
+
+.audio-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-glow);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.session-layout .ai-panel {
+  background: var(--bg-card);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-xl);
+  padding: 2rem;
+  box-shadow: var(--shadow-glow);
+}
+
+.session-layout .ai-insights {
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.session-layout .transcription-box {
+  min-height: 200px;
+  max-height: 300px;
+}
+
+.session-layout .status-grid {
+  margin-bottom: 0;
+  grid-template-columns: repeat(3, 1fr);
+}
+
+/* Responsive design for session layout */
+@media (max-width: 1200px) {
+  .session-content {
+    grid-template-columns: 1fr;
+  }
+  
+  .session-header {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+  
+  .session-controls {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 768px) {
+  .session-layout {
+    padding: 0.5rem;
+  }
+  
+  .session-header {
+    padding: 1rem;
+  }
+  
+  .audio-panel,
+  .session-layout .ai-panel {
+    padding: 1rem;
+  }
+  
+  .session-controls {
+    gap: 0.5rem;
+  }
+  
+  .session-controls button {
+    padding: 0.5rem 1rem;
+    font-size: 0.75rem;
+  }
+}

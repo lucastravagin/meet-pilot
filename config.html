@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet Pilot - Configurações</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'neon-purple': '#A259FF',
+                        'soft-purple': '#C084FC',
+                        'deep-purple': '#6D28D9',
+                        'dark-bg': '#0D0D0D',
+                        'dark-card': '#1A1A1A',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .glass-panel {
+            background: rgba(26, 26, 26, 0.8);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .neon-glow {
+            box-shadow: 0 0 20px rgba(162, 89, 255, 0.3);
+        }
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .gradient-bg {
+            background: linear-gradient(135deg, #0D0D0D 0%, #1A1A1A 50%, #2D1B69 100%);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #A259FF 0%, #C084FC 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen font-system text-white">
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 opacity-30">
+        <div class="absolute top-20 left-20 w-72 h-72 bg-neon-purple rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
+        <div class="absolute top-40 right-20 w-72 h-72 bg-soft-purple rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
+        <div class="absolute bottom-20 left-1/2 w-72 h-72 bg-deep-purple rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-2000"></div>
+    </div>
+
+    <div class="relative z-10 container mx-auto px-6 py-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <div class="float-animation inline-block">
+                <h1 class="text-6xl font-bold gradient-text mb-4">Meet Pilot</h1>
+            </div>
+            <p class="text-xl text-gray-300 mb-2">Copiloto de Reuniões com IA</p>
+            <p class="text-sm text-gray-400">Configure sua sessão e inicie o coaching inteligente</p>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 max-w-7xl mx-auto">
+            
+            <!-- Configuration Panel -->
+            <div class="lg:col-span-2">
+                <div class="glass-panel rounded-2xl p-8">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center">
+                        <span class="text-3xl mr-3">⚙️</span>
+                        Configurações da Sessão
+                    </h2>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Audio Configuration -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-neon-purple">Configuração de Áudio</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Microfone</label>
+                                <select id="micSelect" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20 transition-all">
+                                    <option value="">Selecionando dispositivos...</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Modelo de IA</label>
+                                <select id="modelSelect" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20 transition-all">
+                                    <option value="whisper-1">Whisper-1 (Recomendado)</option>
+                                    <option value="gpt-4o-transcribe">GPT-4o Transcrição</option>
+                                    <option value="gpt-4o-mini-transcribe">GPT-4o Mini</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Session Configuration -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold text-neon-purple">Configuração da Sessão</h3>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Nome da Reunião</label>
+                                <input type="text" id="sessionName" placeholder="Ex: Reunião com Dr. João" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white placeholder-gray-400 focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20 transition-all">
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-gray-300 mb-2">Tipo de Reunião</label>
+                                <select id="meetingType" class="w-full bg-white/10 border border-white/20 rounded-lg px-4 py-3 text-white focus:border-neon-purple focus:ring-2 focus:ring-neon-purple/20 transition-all">
+                                    <option value="sales">Vendas</option>
+                                    <option value="medical">Consulta Médica</option>
+                                    <option value="business">Reunião de Negócios</option>
+                                    <option value="training">Treinamento</option>
+                                    <option value="other">Outro</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4">
+                        <button id="startSessionBtn" class="flex-1 bg-neon-purple hover:bg-soft-purple text-white font-semibold py-4 px-8 rounded-xl transition-all duration-300 transform hover:scale-105 neon-glow flex items-center justify-center">
+                            <span class="text-2xl mr-3">🚀</span>
+                            Iniciar Sessão
+                        </button>
+                        
+                        <button id="testAudioBtn" class="bg-white/10 hover:bg-white/20 text-white font-medium py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center">
+                            <span class="text-xl mr-2">🎤</span>
+                            Testar Áudio
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status and Recent Sessions -->
+            <div class="space-y-6">
+                <!-- System Status -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="text-2xl mr-2">📊</span>
+                        Status do Sistema
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-sm text-gray-300">Conexão</span>
+                            <span id="connectionStatus" class="text-sm font-medium text-red-400">Desconectado</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-sm text-gray-300">Microfone</span>
+                            <span id="micStatus" class="text-sm font-medium text-red-400">Não testado</span>
+                        </div>
+                        
+                        <div class="flex justify-between items-center p-3 bg-white/5 rounded-lg">
+                            <span class="text-sm text-gray-300">IA Coach</span>
+                            <span id="aiStatus" class="text-sm font-medium text-green-400">Pronto</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Sessions (Future) -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="text-2xl mr-2">📝</span>
+                        Sessões Recentes
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <!-- Placeholder for future sessions -->
+                        <div class="text-center py-8 text-gray-400">
+                            <div class="text-4xl mb-2">💼</div>
+                            <p class="text-sm">Suas sessões aparecerão aqui</p>
+                            <p class="text-xs mt-1">Em breve: histórico completo</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="glass-panel rounded-2xl p-6">
+                    <h3 class="text-lg font-bold mb-4 flex items-center">
+                        <span class="text-2xl mr-2">⚡</span>
+                        Ações Rápidas
+                    </h3>
+                    
+                    <div class="space-y-3">
+                        <button class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 text-left flex items-center">
+                            <span class="text-lg mr-3">📚</span>
+                            Gerenciar Playbooks
+                        </button>
+                        
+                        <button class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 text-left flex items-center">
+                            <span class="text-lg mr-3">⚙️</span>
+                            Configurações Avançadas
+                        </button>
+                        
+                        <button class="w-full bg-white/10 hover:bg-white/20 text-white font-medium py-3 px-4 rounded-lg transition-all duration-300 text-left flex items-center">
+                            <span class="text-lg mr-3">📊</span>
+                            Relatórios
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center mt-12 text-gray-400 text-sm">
+            <p>Meet Pilot v1.0.0 - Powered by OpenAI Realtime API</p>
+        </div>
+    </div>
+
+    <script>
+        // Initialize configuration screen
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('Configuration screen initialized');
+            
+            // Setup microphone selection
+            await setupMicrophoneSelection();
+            
+            // Setup event listeners
+            setupEventListeners();
+        });
+
+        async function setupMicrophoneSelection() {
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const micSelect = document.getElementById('micSelect');
+                
+                micSelect.innerHTML = '';
+                
+                const audioInputs = devices.filter(device => device.kind === 'audioinput');
+                
+                if (audioInputs.length === 0) {
+                    micSelect.innerHTML = '<option value="">Nenhum microfone encontrado</option>';
+                    return;
+                }
+                
+                audioInputs.forEach(device => {
+                    const option = document.createElement('option');
+                    option.value = device.deviceId;
+                    option.textContent = device.label || `Microfone ${device.deviceId.slice(0, 8)}`;
+                    micSelect.appendChild(option);
+                });
+                
+                updateMicStatus('Disponível');
+            } catch (error) {
+                console.error('Error setting up microphone selection:', error);
+                updateMicStatus('Erro');
+            }
+        }
+
+        function setupEventListeners() {
+            // Start Session Button
+            document.getElementById('startSessionBtn').addEventListener('click', () => {
+                const sessionName = document.getElementById('sessionName').value;
+                const meetingType = document.getElementById('meetingType').value;
+                const selectedMic = document.getElementById('micSelect').value;
+                const selectedModel = document.getElementById('modelSelect').value;
+                
+                if (!sessionName.trim()) {
+                    alert('Por favor, insira um nome para a reunião');
+                    return;
+                }
+                
+                // Store configuration
+                const config = {
+                    sessionName: sessionName.trim(),
+                    meetingType,
+                    microphoneId: selectedMic,
+                    model: selectedModel,
+                    timestamp: new Date().toISOString()
+                };
+                
+                localStorage.setItem('meetPilotSessionConfig', JSON.stringify(config));
+                
+                // Redirect to main application (using original working version)
+                window.location.href = 'index-original.html';
+            });
+
+            // Test Audio Button
+            document.getElementById('testAudioBtn').addEventListener('click', testAudio);
+        }
+
+        async function testAudio() {
+            const testBtn = document.getElementById('testAudioBtn');
+            const originalText = testBtn.innerHTML;
+            
+            try {
+                testBtn.innerHTML = '<span class="text-xl mr-2">🔄</span>Testando...';
+                testBtn.disabled = true;
+                
+                const selectedMic = document.getElementById('micSelect').value;
+                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        deviceId: selectedMic ? { exact: selectedMic } : undefined
+                    }
+                });
+                
+                updateMicStatus('Funcionando');
+                
+                // Stop the stream after test
+                setTimeout(() => {
+                    stream.getTracks().forEach(track => track.stop());
+                }, 1000);
+                
+                // Show success feedback
+                testBtn.innerHTML = '<span class="text-xl mr-2">✅</span>Teste OK';
+                
+                setTimeout(() => {
+                    testBtn.innerHTML = originalText;
+                    testBtn.disabled = false;
+                }, 2000);
+                
+            } catch (error) {
+                console.error('Audio test failed:', error);
+                updateMicStatus('Falha no teste');
+                
+                testBtn.innerHTML = '<span class="text-xl mr-2">❌</span>Erro';
+                setTimeout(() => {
+                    testBtn.innerHTML = originalText;
+                    testBtn.disabled = false;
+                }, 2000);
+            }
+        }
+
+        function updateMicStatus(status) {
+            const micStatus = document.getElementById('micStatus');
+            micStatus.textContent = status;
+            
+            if (status === 'Funcionando' || status === 'Disponível') {
+                micStatus.className = 'text-sm font-medium text-green-400';
+            } else if (status === 'Erro' || status === 'Falha no teste') {
+                micStatus.className = 'text-sm font-medium text-red-400';
+            } else {
+                micStatus.className = 'text-sm font-medium text-yellow-400';
+            }
+        }
+
+        // Load saved configuration if returning from main app
+        function loadSavedConfig() {
+            const saved = localStorage.getItem('meetPilotSessionConfig');
+            if (saved) {
+                try {
+                    const config = JSON.parse(saved);
+                    document.getElementById('sessionName').value = config.sessionName || '';
+                    document.getElementById('meetingType').value = config.meetingType || 'sales';
+                    document.getElementById('modelSelect').value = config.model || 'whisper-1';
+                    
+                    // Set microphone after devices are loaded
+                    setTimeout(() => {
+                        if (config.microphoneId) {
+                            document.getElementById('micSelect').value = config.microphoneId;
+                        }
+                    }, 500);
+                } catch (error) {
+                    console.error('Error loading saved config:', error);
+                }
+            }
+        }
+
+        // Load config after DOM is ready
+        setTimeout(loadSavedConfig, 100);
+    </script>
+</body>
+</html>
