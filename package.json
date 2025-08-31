@@ -1,11 +1,11 @@
 {
-  "name": "mic-speaker-streamer",
-  "productName": "Mic & Speaker Streamer",
-  "description": "Electron app for simultaneously streaming microphone and speaker audio",
-  "keywords": [],
+  "name": "meet-pilot",
+  "productName": "Meet Pilot",
+  "description": "AI-powered meeting copilot for real-time sales coaching and presentation guidance",
+  "keywords": ["meeting", "ai", "copilot", "sales", "coaching"],
   "main": "./main.js",
   "version": "1.0.0",
-  "author": "Alec Armbruster <alectrocute@gmail.com>",
+  "author": "lucas travagin",
   "scripts": {
     "start": "electron ."
   },
