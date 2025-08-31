@@ -758,20 +758,28 @@ ${context.conversation}
 Horário atual: ${context.timestamp}
 Tamanho do buffer: ${context.bufferSize} mensagens`;
 
+        // Add session context from persona/playbook if available
+        if (sessionContext) {
+            const enhancedContext = buildAIContext(context.conversation);
+            prompt += `
+
+${enhancedContext}`;
+        }
+
         // Add playbook content if available
         if (playbookManager && playbookManager.isEnabled) {
             const relevantContent = await playbookManager.searchRelevantContent(context.conversation);
             if (relevantContent) {
                 prompt += `
 
-Material de apoio da base de conhecimento:
+Material de apoio adicional da base de conhecimento:
 ${relevantContent}`;
             }
         }
 
         prompt += `
 
-Analise esta conversa e forneça sugestões de coaching para o usuário melhorar sua performance na reunião. Use o material de apoio quando disponível para sugestões mais específicas e acionáveis.`;
+Analise esta conversa e forneça sugestões de coaching para o usuário melhorar sua performance na reunião. Use o contexto da persona, playbook e material de apoio quando disponível para sugestões mais específicas e acionáveis.`;
 
         return prompt;
     }
@@ -892,6 +900,277 @@ const recordStatus = document.getElementById('recordStatus');
 const startBtn = document.getElementById('startBtn');
 const stopBtn = document.getElementById('stopBtn');
 const recordBtn = document.getElementById('recordBtn');
+
+// Session Context Management
+let sessionContext = null;
+let personaData = null;
+let playbookData = null;
+
+// Load session context from localStorage (set by sessoes.html)
+function loadSessionContext() {
+    try {
+        const stored = localStorage.getItem('activeSessionContext');
+        if (stored) {
+            sessionContext = JSON.parse(stored);
+            personaData = sessionContext.persona;
+            playbookData = sessionContext.playbook;
+            
+            console.log('🎯 Contexto da sessão carregado:', {
+                sessionId: sessionContext.sessionId,
+                persona: personaData?.nome || 'Nenhuma',
+                playbook: playbookData?.nome || 'Nenhum',
+                isQuickSession: sessionContext.isQuickSession || false
+            });
+            
+            // Update UI with session context
+            updateSessionUI();
+            
+            return true;
+        } else {
+            console.log('ℹ️ Nenhum contexto de sessão encontrado - sessão sem preparação');
+            return false;
+        }
+    } catch (error) {
+        console.error('❌ Erro ao carregar contexto da sessão:', error);
+        return false;
+    }
+}
+
+// Update UI with loaded session context
+function updateSessionUI() {
+    const sessionTitle = document.getElementById('sessionTitle');
+    
+    if (sessionContext) {
+        // Update session title
+        if (sessionContext.sessionData?.titulo) {
+            sessionTitle.textContent = sessionContext.sessionData.titulo;
+        }
+        
+        // Update AI status with context info
+        const aiStatus = document.getElementById('aiStatus');
+        if (aiStatus) {
+            if (personaData && playbookData) {
+                aiStatus.textContent = `Coaching: ${personaData.nome} | ${playbookData.nome}`;
+            } else if (personaData) {
+                aiStatus.textContent = `Coaching: ${personaData.nome}`;
+            } else if (playbookData) {
+                aiStatus.textContent = `Coaching: ${playbookData.nome}`;
+            } else if (sessionContext.isQuickSession) {
+                aiStatus.textContent = 'Sessão Rápida - IA Adaptativa';
+            }
+        }
+        
+        // Show context preview in suggestions container
+        showContextPreview();
+    }
+}
+
+// Show context preview before starting
+function showContextPreview() {
+    const suggestionsContainer = document.getElementById('suggestionsContainer');
+    if (!suggestionsContainer || !sessionContext) return;
+    
+    const contextHTML = `
+        <div class="context-preview">
+            <div class="context-header">
+                <h4>🎯 Contexto da Sessão Carregado</h4>
+            </div>
+            
+            ${personaData ? `
+                <div class="context-section">
+                    <h5>👤 Persona: ${personaData.nome}</h5>
+                    <div class="context-details">
+                        <p><strong>Empresa:</strong> ${personaData.empresa || 'N/A'}</p>
+                        <p><strong>Cargo:</strong> ${personaData.cargo || 'N/A'}</p>
+                        <p><strong>Classificação:</strong> ${personaData.classificacao || 'prospect'}</p>
+                        ${personaData.potencial_receita > 0 ? `<p><strong>Potencial:</strong> R$ ${personaData.potencial_receita.toLocaleString()}</p>` : ''}
+                    </div>
+                    
+                    ${personaData.necessidades?.primarias ? `
+                        <div class="context-needs">
+                            <strong>Necessidades Principais:</strong>
+                            <ul>
+                                ${personaData.necessidades.primarias.map(n => `<li>${n}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                    
+                    ${personaData.objecoes_comuns && Object.keys(personaData.objecoes_comuns).length > 0 ? `
+                        <div class="context-objections">
+                            <strong>Objeções Esperadas:</strong>
+                            <ul>
+                                ${Object.entries(personaData.objecoes_comuns).map(([key, value]) => `<li><strong>${key}:</strong> ${value}</li>`).join('')}
+                            </ul>
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            
+            ${playbookData ? `
+                <div class="context-section">
+                    <h5>📚 Playbook: ${playbookData.nome}</h5>
+                    <div class="context-details">
+                        <p><strong>Tipo:</strong> ${playbookData.tipo_reuniao || 'N/A'}</p>
+                        <p><strong>Objetivo:</strong> ${playbookData.objetivo_primario || 'N/A'}</p>
+                        ${playbookData.persona_target ? `<p><strong>Target:</strong> ${playbookData.persona_target}</p>` : ''}
+                    </div>
+                    
+                    ${playbookData.gatilhos_positivos && Object.keys(playbookData.gatilhos_positivos).length > 0 ? `
+                        <div class="context-triggers">
+                            <strong>Gatilhos Positivos:</strong>
+                            ${playbookData.gatilhos_positivos.palavras ? `
+                                <p>Palavras-chave: ${playbookData.gatilhos_positivos.palavras.join(', ')}</p>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                    
+                    ${playbookData.tecnicas_vendas && Object.keys(playbookData.tecnicas_vendas).length > 0 ? `
+                        <div class="context-techniques">
+                            <strong>Técnicas Principais:</strong>
+                            ${playbookData.tecnicas_vendas.principais ? `
+                                <ul>
+                                    ${playbookData.tecnicas_vendas.principais.map(t => `<li>${t}</li>`).join('')}
+                                </ul>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+                </div>
+            ` : ''}
+            
+            ${sessionContext.isQuickSession ? `
+                <div class="context-section">
+                    <h5>⚡ Sessão Rápida</h5>
+                    <p>A IA irá se adaptar durante a conversa e sugerir personas/playbooks relevantes.</p>
+                </div>
+            ` : ''}
+            
+            <div class="context-footer">
+                <p class="context-hint">💡 Inicie a sessão para receber coaching personalizado baseado neste contexto</p>
+            </div>
+        </div>
+    `;
+    
+    suggestionsContainer.innerHTML = contextHTML;
+}
+
+// Build enhanced context for AI coach
+function buildAIContext(conversationText) {
+    let contextPrompt = '';
+    
+    // Base conversation context - conversationText is already a formatted string
+    if (conversationText && typeof conversationText === 'string' && conversationText.trim().length > 0) {
+        contextPrompt += `\n## CONVERSA ATUAL:\n${conversationText}\n`;
+    }
+    
+    // Add persona context if available
+    if (personaData) {
+        contextPrompt += `\n## CONTEXTO DA PERSONA:\n`;
+        contextPrompt += `Nome: ${personaData.nome}\n`;
+        contextPrompt += `Empresa: ${personaData.empresa || 'N/A'}\n`;
+        contextPrompt += `Cargo: ${personaData.cargo || 'N/A'}\n`;
+        contextPrompt += `Classificação: ${personaData.classificacao || 'prospect'}\n`;
+        
+        if (personaData.potencial_receita > 0) {
+            contextPrompt += `Potencial de Receita: R$ ${personaData.potencial_receita.toLocaleString()}\n`;
+        }
+        
+        // Add business context
+        if (personaData.contexto_negocio) {
+            const contexto = personaData.contexto_negocio;
+            if (contexto.situacao_atual) contextPrompt += `Situação Atual: ${contexto.situacao_atual}\n`;
+            if (contexto.desafios) contextPrompt += `Desafios: ${Array.isArray(contexto.desafios) ? contexto.desafios.join(', ') : contexto.desafios}\n`;
+            if (contexto.objetivo) contextPrompt += `Objetivo: ${contexto.objetivo}\n`;
+        }
+        
+        // Add needs
+        if (personaData.necessidades?.primarias) {
+            contextPrompt += `Necessidades Principais: ${personaData.necessidades.primarias.join(', ')}\n`;
+        }
+        
+        // Add common objections
+        if (personaData.objecoes_comuns && Object.keys(personaData.objecoes_comuns).length > 0) {
+            contextPrompt += `Objeções Comuns:\n`;
+            Object.entries(personaData.objecoes_comuns).forEach(([key, value]) => {
+                contextPrompt += `- ${key}: ${value}\n`;
+            });
+        }
+        
+        // Add communication preferences
+        if (personaData.preferencias_comunicacao) {
+            const pref = personaData.preferencias_comunicacao;
+            if (pref.tom) contextPrompt += `Tom de Comunicação Preferido: ${pref.tom}\n`;
+            if (pref.foco) contextPrompt += `Foco: ${pref.foco}\n`;
+        }
+    }
+    
+    // Add playbook context if available
+    if (playbookData) {
+        contextPrompt += `\n## ESTRATÉGIA DE VENDAS (PLAYBOOK):\n`;
+        contextPrompt += `Nome: ${playbookData.nome}\n`;
+        contextPrompt += `Tipo de Reunião: ${playbookData.tipo_reuniao || 'N/A'}\n`;
+        contextPrompt += `Objetivo Primário: ${playbookData.objetivo_primario || 'N/A'}\n`;
+        
+        // Add opening strategies
+        if (playbookData.abertura) {
+            contextPrompt += `\nESTRATÉGIAS DE ABERTURA:\n`;
+            if (playbookData.abertura.rapport) {
+                contextPrompt += `Rapport: ${Array.isArray(playbookData.abertura.rapport) ? playbookData.abertura.rapport.join('; ') : playbookData.abertura.rapport}\n`;
+            }
+            if (playbookData.abertura.tom) {
+                contextPrompt += `Tom: ${playbookData.abertura.tom}\n`;
+            }
+        }
+        
+        // Add qualification questions
+        if (playbookData.qualificacao?.perguntas_chave) {
+            contextPrompt += `\nPERGUNTAS DE QUALIFICAÇÃO:\n${playbookData.qualificacao.perguntas_chave.join('\n')}\n`;
+        }
+        
+        // Add objection handling
+        if (playbookData.tratamento_objecoes && Object.keys(playbookData.tratamento_objecoes).length > 0) {
+            contextPrompt += `\nTRATAMENTO DE OBJEÇÕES:\n`;
+            Object.entries(playbookData.tratamento_objecoes).forEach(([key, value]) => {
+                const responses = Array.isArray(value) ? value.join('; ') : value;
+                contextPrompt += `${key}: ${responses}\n`;
+            });
+        }
+        
+        // Add positive triggers
+        if (playbookData.gatilhos_positivos?.palavras) {
+            contextPrompt += `\nGATILHOS POSITIVOS: ${playbookData.gatilhos_positivos.palavras.join(', ')}\n`;
+        }
+        
+        // Add negative triggers
+        if (playbookData.gatilhos_negativos?.palavras) {
+            contextPrompt += `\nGATILHOS NEGATIVOS (ATENÇÃO): ${playbookData.gatilhos_negativos.palavras.join(', ')}\n`;
+        }
+        
+        // Add sales techniques
+        if (playbookData.tecnicas_vendas?.principais) {
+            contextPrompt += `\nTÉCNICAS DE VENDAS: ${playbookData.tecnicas_vendas.principais.join(', ')}\n`;
+        }
+        
+        // Add communication tone
+        if (playbookData.tom_comunicacao) {
+            const tom = playbookData.tom_comunicacao;
+            if (tom.linguagem) contextPrompt += `Linguagem Recomendada: ${tom.linguagem}\n`;
+            if (tom.postura) contextPrompt += `Postura: ${tom.postura}\n`;
+            if (tom.foco) contextPrompt += `Foco: ${tom.foco}\n`;
+        }
+    }
+    
+    // Add coaching instructions
+    contextPrompt += `\n## INSTRUÇÕES DE COACHING:\n`;
+    contextPrompt += `Você é um coach de vendas em tempo real. Baseado no contexto da persona e playbook acima, forneça sugestões específicas, práticas e acionáveis para maximizar o resultado desta reunião.\n`;
+    contextPrompt += `Suas sugestões devem ser:\n`;
+    contextPrompt += `1. Específicas para esta persona e situação\n`;
+    contextPrompt += `2. Baseadas nas técnicas do playbook selecionado\n`;
+    contextPrompt += `3. Sensíveis ao momento da conversa\n`;
+    contextPrompt += `4. Práticas e acionáveis\n`;
+    contextPrompt += `5. Focadas em resultados de vendas\n\n`;
+    
+    return contextPrompt;
+}
 const modelSelect = document.getElementById('modelSelect');
 const aiStatus = document.getElementById('aiStatus');
 const suggestionsContainer = document.getElementById('suggestionsContainer');
@@ -1269,8 +1548,32 @@ stopBtn.addEventListener('click', stop);
 recordBtn.addEventListener('click', toggleRecording);
 updateMicSelect();
 
-// Initialize Playbook Manager
-playbookManager = new PlaybookManager();
+// Initialize with session context
+async function initializeApp() {
+    console.log('🚀 Meet Pilot - Iniciando aplicação...');
+    
+    // Load session context first
+    const hasContext = loadSessionContext();
+    
+    try {
+        // Initialize Playbook Manager (already initializes itself in constructor)
+        playbookManager = new PlaybookManager();
+        
+        console.log('✅ PlaybookManager inicializado');
+        
+        if (hasContext) {
+            console.log('🎯 Sessão iniciada com contexto de persona/playbook');
+        } else {
+            console.log('ℹ️ Sessão iniciada sem contexto pré-definido - modo adaptativo');
+        }
+        
+    } catch (error) {
+        console.error('❌ Erro ao inicializar PlaybookManager:', error);
+    }
+}
+
+// Initialize the app
+initializeApp();
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', stop);

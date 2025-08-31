@@ -1,0 +1,237 @@
+/* Session Context Preview Styles */
+.context-preview {
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid rgba(79, 70, 229, 0.3);
+    border-radius: 16px;
+    padding: 24px;
+    margin: 20px 0;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(79, 70, 229, 0.15);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    animation: contextFadeIn 0.5s ease-out;
+}
+
+@keyframes contextFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.context-header {
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgba(79, 70, 229, 0.2);
+}
+
+.context-header h4 {
+    margin: 0;
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #4f46e5;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.context-section {
+    margin-bottom: 20px;
+    padding: 16px;
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 12px;
+    border-left: 4px solid #4f46e5;
+}
+
+.context-section:last-child {
+    margin-bottom: 0;
+}
+
+.context-section h5 {
+    margin: 0 0 12px 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #1e293b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.context-details {
+    margin-bottom: 16px;
+}
+
+.context-details p {
+    margin: 6px 0;
+    font-size: 0.9rem;
+    color: #475569;
+    line-height: 1.4;
+}
+
+.context-details strong {
+    color: #1e293b;
+    font-weight: 600;
+}
+
+.context-needs,
+.context-objections,
+.context-triggers,
+.context-techniques {
+    margin-top: 12px;
+}
+
+.context-needs strong,
+.context-objections strong,
+.context-triggers strong,
+.context-techniques strong {
+    display: block;
+    margin-bottom: 8px;
+    color: #1e293b;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.context-needs ul,
+.context-objections ul,
+.context-techniques ul {
+    margin: 0;
+    padding-left: 20px;
+    list-style-type: disc;
+}
+
+.context-needs li,
+.context-objections li,
+.context-techniques li {
+    margin: 4px 0;
+    font-size: 0.85rem;
+    color: #475569;
+    line-height: 1.3;
+}
+
+.context-objections li strong {
+    color: #dc2626;
+    font-weight: 600;
+}
+
+.context-triggers p {
+    margin: 4px 0;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.context-footer {
+    margin-top: 20px;
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(99, 102, 241, 0.1));
+    border-radius: 12px;
+    border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.context-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #4f46e5;
+    font-weight: 500;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .context-preview {
+        padding: 16px;
+        margin: 12px 0;
+    }
+    
+    .context-header h4 {
+        font-size: 1.2rem;
+    }
+    
+    .context-section {
+        padding: 12px;
+    }
+    
+    .context-section h5 {
+        font-size: 1rem;
+    }
+    
+    .context-details p,
+    .context-needs li,
+    .context-objections li,
+    .context-techniques li,
+    .context-triggers p {
+        font-size: 0.8rem;
+    }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+    .context-preview {
+        background: rgba(15, 23, 42, 0.95);
+        border-color: rgba(99, 102, 241, 0.4);
+        color: #e2e8f0;
+    }
+    
+    .context-header {
+        border-bottom-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .context-header h4 {
+        color: #a78bfa;
+    }
+    
+    .context-section {
+        background: rgba(30, 41, 59, 0.6);
+        border-left-color: #a78bfa;
+    }
+    
+    .context-section h5 {
+        color: #f1f5f9;
+    }
+    
+    .context-details p {
+        color: #cbd5e1;
+    }
+    
+    .context-details strong,
+    .context-needs strong,
+    .context-objections strong,
+    .context-triggers strong,
+    .context-techniques strong {
+        color: #f1f5f9;
+    }
+    
+    .context-needs li,
+    .context-objections li,
+    .context-techniques li,
+    .context-triggers p {
+        color: #cbd5e1;
+    }
+    
+    .context-footer {
+        background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+        border-color: rgba(99, 102, 241, 0.3);
+    }
+    
+    .context-hint {
+        color: #a78bfa;
+    }
+}
+
+/* Integration with existing glass-morphism styles */
+.glass-morphism .context-preview {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.glass-morphism .context-section {
+    background: rgba(255, 255, 255, 0.05);
+    border-left-color: rgba(255, 255, 255, 0.3);
+}
