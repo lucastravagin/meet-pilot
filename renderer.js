@@ -247,6 +247,372 @@ class WavRecorder {
     }
 }
 
+// Playbook Management System
+class PlaybookManager {
+    constructor() {
+        this.documents = new Map();
+        this.categories = {
+            objections: [],
+            scripts: [],
+            cases: [],
+            questions: []
+        };
+        this.searchIndex = null;
+        this.isEnabled = window.electronAPI?.playbook?.enabled || false;
+        this.config = window.electronAPI?.playbook || {};
+        this.init();
+    }
+
+    init() {
+        if (!this.isEnabled) {
+            console.log('Playbook system disabled via .env');
+            return;
+        }
+
+        this.setupUI();
+        this.loadStoredDocuments();
+        this.updateStatus('Sistema ativado - Pronto para receber documentos');
+    }
+
+    setupUI() {
+        const panel = document.getElementById('playbookPanel');
+        if (panel) {
+            panel.classList.add('enabled');
+        }
+
+        // Update supported types and max size from config
+        const typesElement = document.getElementById('supportedTypes');
+        const maxSizeElement = document.getElementById('maxSize');
+        
+        if (typesElement) {
+            typesElement.textContent = this.config.allowedTypes?.join(', ').toUpperCase() || 'PDF, DOCX, TXT';
+        }
+        
+        if (maxSizeElement) {
+            maxSizeElement.textContent = `Máx ${this.config.maxFileSize || '10MB'}`;
+        }
+
+        // Setup event listeners
+        this.setupEventListeners();
+    }
+
+    setupEventListeners() {
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('fileInput');
+        const uploadSection = document.getElementById('uploadSection');
+
+        if (uploadBtn && fileInput) {
+            uploadBtn.addEventListener('click', () => fileInput.click());
+            fileInput.addEventListener('change', (e) => this.handleFileUpload(e.target.files));
+        }
+
+        if (uploadSection) {
+            uploadSection.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadSection.classList.add('drag-over');
+            });
+
+            uploadSection.addEventListener('dragleave', () => {
+                uploadSection.classList.remove('drag-over');
+            });
+
+            uploadSection.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadSection.classList.remove('drag-over');
+                this.handleFileUpload(e.dataTransfer.files);
+            });
+        }
+    }
+
+    async handleFileUpload(files) {
+        this.updateStatus('Processando arquivos...');
+        
+        for (const file of files) {
+            try {
+                await this.processFile(file);
+            } catch (error) {
+                console.error('Error processing file:', file.name, error);
+                this.updateStatus(`Erro ao processar ${file.name}: ${error.message}`);
+            }
+        }
+        
+        this.updateStatus('Documentos processados com sucesso');
+        this.updateCategoryCounts();
+        this.renderDocumentsList();
+    }
+
+    async processFile(file) {
+        // Validate file type
+        const extension = file.name.split('.').pop().toLowerCase();
+        if (!this.config.allowedTypes?.includes(extension)) {
+            throw new Error(`Tipo de arquivo não suportado: ${extension}`);
+        }
+
+        // Validate file size
+        const maxSize = this.parseSize(this.config.maxFileSize || '10MB');
+        if (file.size > maxSize) {
+            throw new Error(`Arquivo muito grande. Máximo: ${this.config.maxFileSize}`);
+        }
+
+        const content = await this.extractTextFromFile(file);
+        const category = await this.categorizeContent(content);
+        
+        const document = {
+            id: Date.now() + Math.random(),
+            name: file.name,
+            type: extension,
+            size: file.size,
+            content: content,
+            category: category,
+            uploadDate: new Date().toISOString(),
+            keywords: this.extractKeywords(content)
+        };
+
+        this.documents.set(document.id, document);
+        this.categories[category].push(document.id);
+        
+        // Save to localStorage
+        this.saveToStorage();
+        
+        return document;
+    }
+
+    async extractTextFromFile(file) {
+        const extension = file.name.split('.').pop().toLowerCase();
+        
+        switch (extension) {
+            case 'txt':
+                return await file.text();
+                
+            case 'pdf':
+                // For now, return placeholder - PDF parsing would need pdf-parse
+                return `[PDF Content] ${file.name} - ${file.size} bytes`;
+                
+            case 'docx':
+                // For now, return placeholder - DOCX parsing would need mammoth
+                return `[DOCX Content] ${file.name} - ${file.size} bytes`;
+                
+            default:
+                throw new Error(`Unsupported file type: ${extension}`);
+        }
+    }
+
+    async categorizeContent(content) {
+        // Simple keyword-based categorization
+        const text = content.toLowerCase();
+        
+        const patterns = {
+            objections: ['objeção', 'preço', 'caro', 'orçamento', 'não temos', 'vamos pensar'],
+            scripts: ['script', 'roteiro', 'apresentação', 'abertura', 'fechamento'],
+            cases: ['caso', 'sucesso', 'cliente', 'resultado', 'roi', 'economia'],
+            questions: ['pergunta', 'questão', 'descoberta', 'necessidade', 'dor']
+        };
+
+        for (const [category, keywords] of Object.entries(patterns)) {
+            if (keywords.some(keyword => text.includes(keyword))) {
+                return category;
+            }
+        }
+
+        return 'scripts'; // Default category
+    }
+
+    extractKeywords(content) {
+        // Simple keyword extraction
+        const words = content.toLowerCase()
+            .replace(/[^\w\s]/g, '')
+            .split(/\s+/)
+            .filter(word => word.length > 3);
+        
+        const frequency = {};
+        words.forEach(word => {
+            frequency[word] = (frequency[word] || 0) + 1;
+        });
+
+        return Object.entries(frequency)
+            .sort(([,a], [,b]) => b - a)
+            .slice(0, 10)
+            .map(([word]) => word);
+    }
+
+    async searchRelevantContent(conversationContext) {
+        if (!this.isEnabled || this.documents.size === 0) {
+            return '';
+        }
+
+        const query = conversationContext.toLowerCase();
+        const relevantDocs = [];
+
+        for (const [id, doc] of this.documents) {
+            const score = this.calculateRelevanceScore(query, doc);
+            if (score > 0.3) {
+                relevantDocs.push({ doc, score });
+            }
+        }
+
+        // Sort by relevance and take top 3
+        relevantDocs.sort((a, b) => b.score - a.score);
+        
+        return relevantDocs
+            .slice(0, 3)
+            .map(({ doc }) => `[${doc.category.toUpperCase()}] ${doc.content.slice(0, 200)}...`)
+            .join('\n\n');
+    }
+
+    calculateRelevanceScore(query, document) {
+        const content = document.content.toLowerCase();
+        const keywords = document.keywords;
+        
+        let score = 0;
+        
+        // Direct text match
+        if (content.includes(query)) {
+            score += 0.5;
+        }
+        
+        // Keyword match
+        const queryWords = query.split(/\s+/);
+        for (const word of queryWords) {
+            if (keywords.includes(word)) {
+                score += 0.2;
+            }
+        }
+        
+        return Math.min(score, 1);
+    }
+
+    updateCategoryCounts() {
+        Object.keys(this.categories).forEach(category => {
+            const element = document.getElementById(`${category}-count`);
+            if (element) {
+                const count = this.categories[category].length;
+                element.textContent = `${count} documento${count !== 1 ? 's' : ''}`;
+            }
+        });
+    }
+
+    renderDocumentsList() {
+        const container = document.getElementById('documentsList');
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        for (const [id, doc] of this.documents) {
+            const item = document.createElement('div');
+            item.className = 'document-item';
+            item.innerHTML = `
+                <div class="document-icon">${this.getDocumentIcon(doc.type)}</div>
+                <div class="document-info">
+                    <div class="document-name">${doc.name}</div>
+                    <div class="document-meta">${doc.category} • ${this.formatFileSize(doc.size)}</div>
+                </div>
+                <div class="document-actions">
+                    <button class="btn-icon" onclick="playbookManager.previewDocument('${id}')" title="Visualizar">👁️</button>
+                    <button class="btn-icon" onclick="playbookManager.deleteDocument('${id}')" title="Excluir">🗑️</button>
+                </div>
+            `;
+            container.appendChild(item);
+        }
+    }
+
+    getDocumentIcon(type) {
+        const icons = {
+            pdf: '📄',
+            docx: '📝',
+            txt: '📃'
+        };
+        return icons[type] || '📄';
+    }
+
+    formatFileSize(bytes) {
+        if (bytes < 1024) return bytes + ' B';
+        if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+        return Math.round(bytes / (1024 * 1024)) + ' MB';
+    }
+
+    parseSize(sizeStr) {
+        const match = sizeStr.match(/^(\d+)(MB|KB|B)$/i);
+        if (!match) return 10 * 1024 * 1024; // Default 10MB
+        
+        const value = parseInt(match[1]);
+        const unit = match[2].toUpperCase();
+        
+        switch (unit) {
+            case 'B': return value;
+            case 'KB': return value * 1024;
+            case 'MB': return value * 1024 * 1024;
+            default: return 10 * 1024 * 1024;
+        }
+    }
+
+    previewDocument(id) {
+        const doc = this.documents.get(id);
+        if (doc) {
+            alert(`Preview: ${doc.name}\n\nCategoria: ${doc.category}\n\nConteúdo (preview):\n${doc.content.slice(0, 300)}...`);
+        }
+    }
+
+    deleteDocument(id) {
+        const doc = this.documents.get(id);
+        if (doc && confirm(`Excluir documento "${doc.name}"?`)) {
+            // Remove from category
+            const categoryIndex = this.categories[doc.category].indexOf(id);
+            if (categoryIndex > -1) {
+                this.categories[doc.category].splice(categoryIndex, 1);
+            }
+            
+            // Remove from documents
+            this.documents.delete(id);
+            
+            // Update UI
+            this.updateCategoryCounts();
+            this.renderDocumentsList();
+            this.saveToStorage();
+            
+            this.updateStatus(`Documento "${doc.name}" excluído`);
+        }
+    }
+
+    updateStatus(message) {
+        const statusElement = document.getElementById('playbookStatus');
+        if (statusElement) {
+            statusElement.textContent = message;
+        }
+    }
+
+    saveToStorage() {
+        try {
+            const data = {
+                documents: Array.from(this.documents.entries()),
+                categories: this.categories
+            };
+            localStorage.setItem('meetPilotPlaybook', JSON.stringify(data));
+        } catch (error) {
+            console.error('Error saving playbook to storage:', error);
+        }
+    }
+
+    loadStoredDocuments() {
+        try {
+            const stored = localStorage.getItem('meetPilotPlaybook');
+            if (stored) {
+                const data = JSON.parse(stored);
+                this.documents = new Map(data.documents || []);
+                this.categories = data.categories || this.categories;
+                
+                this.updateCategoryCounts();
+                this.renderDocumentsList();
+                
+                const docCount = this.documents.size;
+                this.updateStatus(`${docCount} documento${docCount !== 1 ? 's' : ''} carregado${docCount !== 1 ? 's' : ''}`);
+            }
+        } catch (error) {
+            console.error('Error loading stored playbook:', error);
+            this.updateStatus('Erro ao carregar documentos salvos');
+        }
+    }
+}
+
 // AI Analysis System
 class AICoach {
     constructor(apiKey) {
@@ -319,7 +685,7 @@ class AICoach {
     }
 
     async callOpenAIAnalysis(context) {
-        const prompt = this.buildAnalysisPrompt(context);
+        const prompt = await this.buildAnalysisPrompt(context);
         
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -337,11 +703,12 @@ class AICoach {
                         Analise a conversa e forneça 1-3 sugestões curtas e acionáveis para ajudar o usuário a melhorar sua performance.
                         
                         Foque em:
-                        - Identificar objeções e sugerir respostas
+                        - Identificar objeções e sugerir respostas específicas
                         - Reconhecer sinais de compra e próximos passos
                         - Melhorar engajamento e fluxo da conversa
                         - Sugerir perguntas relevantes ou demonstrações
                         - Recomendações de timing
+                        - Use o material de apoio fornecido para sugestões mais específicas
                         
                         Responda APENAS com JSON válido neste formato exato:
                         {
@@ -360,7 +727,7 @@ class AICoach {
                         content: prompt
                     }
                 ],
-                max_tokens: 300,
+                max_tokens: 400,
                 temperature: 0.7
             })
         });
@@ -384,14 +751,29 @@ class AICoach {
         }
     }
 
-    buildAnalysisPrompt(context) {
-        return `Conversa recente:
+    async buildAnalysisPrompt(context) {
+        let prompt = `Conversa recente:
 ${context.conversation}
 
 Horário atual: ${context.timestamp}
-Tamanho do buffer: ${context.bufferSize} mensagens
+Tamanho do buffer: ${context.bufferSize} mensagens`;
 
-Analise esta conversa e forneça sugestões de coaching para o usuário melhorar sua performance na reunião.`;
+        // Add playbook content if available
+        if (playbookManager && playbookManager.isEnabled) {
+            const relevantContent = await playbookManager.searchRelevantContent(context.conversation);
+            if (relevantContent) {
+                prompt += `
+
+Material de apoio da base de conhecimento:
+${relevantContent}`;
+            }
+        }
+
+        prompt += `
+
+Analise esta conversa e forneça sugestões de coaching para o usuário melhorar sua performance na reunião. Use o material de apoio quando disponível para sugestões mais específicas e acionáveis.`;
+
+        return prompt;
     }
 
     processSuggestions(suggestions) {
@@ -498,6 +880,7 @@ let wavRecorder = new WavRecorder();
 let microphoneStream = null;
 let systemAudioStream = null;
 let aiCoach = null;
+let playbookManager = null;
 
 // DOM elements
 const micResults = document.getElementById('micResults');
@@ -885,6 +1268,9 @@ startBtn.addEventListener('click', start);
 stopBtn.addEventListener('click', stop);
 recordBtn.addEventListener('click', toggleRecording);
 updateMicSelect();
+
+// Initialize Playbook Manager
+playbookManager = new PlaybookManager();
 
 // Cleanup on page unload
 window.addEventListener('beforeunload', stop);

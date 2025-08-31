@@ -4,357 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Meet Pilot - Copiloto de Reuniões com IA</title>
-  <style>
-    :root {
-      --bg-primary: #0D0D0D;
-      --bg-secondary: #1A1A1A;
-      --bg-card: rgba(26, 26, 26, 0.8);
-      --text-primary: #FFFFFF;
-      --text-secondary: rgba(255, 255, 255, 0.7);
-      --text-muted: rgba(255, 255, 255, 0.5);
-      --purple-neon: #A259FF;
-      --purple-soft: #C084FC;
-      --purple-violet: #6D28D9;
-      --success: #10B981;
-      --warning: #F59E0B;
-      --danger: #EF4444;
-      --border-radius: 1rem;
-      --border-radius-xl: 1.5rem;
-      --shadow-glow: 0 0 20px rgba(162, 89, 255, 0.3);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      background-image: 
-        radial-gradient(circle at 20% 80%, rgba(162, 89, 255, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 20%, rgba(109, 40, 217, 0.1) 0%, transparent 50%);
-    }
-
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      display: grid;
-      gap: 2rem;
-      grid-template-columns: 1fr 1fr;
-      min-height: 100vh;
-    }
-
-    .main-panel {
-      background: var(--bg-card);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius-xl);
-      padding: 2rem;
-      box-shadow: var(--shadow-glow);
-      transition: var(--transition);
-    }
-
-    .ai-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-    }
-
-    h1 {
-      font-size: 2.5rem;
-      font-weight: 700;
-      background: linear-gradient(135deg, var(--purple-neon) 0%, var(--purple-soft) 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 0.5rem;
-      text-align: center;
-    }
-
-    .subtitle {
-      font-size: 1rem;
-      color: var(--text-secondary);
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .controls-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .control-label {
-      font-size: 0.875rem;
-      font-weight: 600;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    button, select {
-      background: linear-gradient(135deg, var(--purple-violet) 0%, var(--purple-neon) 100%);
-      color: var(--text-primary);
-      border: none;
-      border-radius: var(--border-radius);
-      padding: 0.875rem 1.5rem;
-      font-size: 0.95rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: var(--transition);
-      box-shadow: 0 4px 15px rgba(162, 89, 255, 0.2);
-    }
-
-    button:hover, select:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(162, 89, 255, 0.4);
-    }
-
-    button:active {
-      transform: translateY(0);
-    }
-
-    button:disabled {
-      background: rgba(255, 255, 255, 0.1);
-      color: var(--text-muted);
-      cursor: not-allowed;
-      transform: none;
-      box-shadow: none;
-    }
-
-    .btn-danger {
-      background: linear-gradient(135deg, var(--danger) 0%, #DC2626 100%);
-    }
-
-    .btn-danger:hover {
-      box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-    }
-
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .status-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius);
-      padding: 1rem;
-      text-align: center;
-      transition: var(--transition);
-    }
-
-    .status-card.connected {
-      background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(5, 150, 105, 0.1) 100%);
-      border-color: var(--success);
-      box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
-    }
-
-    .status-card.disconnected {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.1);
-    }
-
-    .status-label {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-secondary);
-      margin-bottom: 0.5rem;
-    }
-
-    .status-value {
-      font-size: 0.95rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .transcription-section {
-      margin-bottom: 2rem;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      margin-bottom: 1rem;
-    }
-
-    .section-icon {
-      width: 20px;
-      height: 20px;
-      background: linear-gradient(135deg, var(--purple-neon) 0%, var(--purple-soft) 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.75rem;
-    }
-
-    .section-title {
-      font-size: 1rem;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .transcription-box {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      min-height: 150px;
-      max-height: 200px;
-      overflow-y: auto;
-      font-family: 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
-      font-size: 0.875rem;
-      line-height: 1.6;
-      color: var(--text-secondary);
-      white-space: pre-wrap;
-      transition: var(--transition);
-    }
-
-    .transcription-box:hover {
-      border-color: rgba(162, 89, 255, 0.3);
-    }
-
-    .ai-insights {
-      background: linear-gradient(135deg, rgba(162, 89, 255, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%);
-      border: 1px solid rgba(162, 89, 255, 0.2);
-      border-radius: var(--border-radius-xl);
-      padding: 2rem;
-      height: fit-content;
-    }
-
-    .ai-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .ai-icon {
-      width: 40px;
-      height: 40px;
-      background: linear-gradient(135deg, var(--purple-neon) 0%, var(--purple-soft) 100%);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.5rem;
-      box-shadow: 0 0 20px rgba(162, 89, 255, 0.3);
-    }
-
-    .ai-title {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--text-primary);
-    }
-
-    .ai-status {
-      font-size: 0.875rem;
-      color: var(--text-secondary);
-      margin-top: 0.25rem;
-    }
-
-    .suggestions-container {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      min-height: 300px;
-    }
-
-    .suggestion-card {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: var(--border-radius);
-      padding: 1.5rem;
-      transition: var(--transition);
-      opacity: 0;
-      transform: translateY(20px);
-      animation: slideIn 0.5s ease-out forwards;
-    }
-
-    .suggestion-card:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(162, 89, 255, 0.2);
-    }
-
-    .suggestion-type {
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--purple-soft);
-      margin-bottom: 0.5rem;
-    }
-
-    .suggestion-text {
-      font-size: 0.95rem;
-      line-height: 1.5;
-      color: var(--text-primary);
-      margin-bottom: 1rem;
-    }
-
-    .suggestion-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-
-    .btn-small {
-      padding: 0.5rem 1rem;
-      font-size: 0.75rem;
-      border-radius: 0.5rem;
-    }
-
-    .waiting-message {
-      text-align: center;
-      color: var(--text-muted);
-      font-style: italic;
-      margin-top: 2rem;
-    }
-
-    @keyframes slideIn {
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* Scrollbar customization */
-    ::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    ::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb {
-      background: var(--purple-neon);
-      border-radius: 3px;
-    }
-
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--purple-soft);
-    }
-  </style>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -437,6 +87,51 @@
             Inicie sua sessão de reunião para receber sugestões de coaching com IA
           </div>
         </div>
+      </div>
+    <!-- Playbook Panel -->
+    <div class="playbook-panel" id="playbookPanel">
+      <div class="playbook-header">
+        <div class="playbook-icon">📚</div>
+        <div>
+          <div class="playbook-title">Base de Conhecimento</div>
+          <div class="playbook-status" id="playbookStatus">Carregando configurações...</div>
+        </div>
+      </div>
+
+      <div class="upload-section" id="uploadSection">
+        <button class="upload-btn" id="uploadBtn">📁 Adicionar Material</button>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.txt" multiple style="display: none;">
+        <div class="upload-info">
+          Arraste arquivos aqui ou clique para selecionar<br>
+          <span id="supportedTypes">PDF, DOCX, TXT</span> • <span id="maxSize">Máx 10MB</span>
+        </div>
+      </div>
+
+      <div class="categories-grid">
+        <div class="category-card" data-category="objections">
+          <div class="category-icon">🚫</div>
+          <div class="category-name">Objeções</div>
+          <div class="category-count" id="objections-count">0 documentos</div>
+        </div>
+        <div class="category-card" data-category="scripts">
+          <div class="category-icon">📝</div>
+          <div class="category-name">Scripts</div>
+          <div class="category-count" id="scripts-count">0 documentos</div>
+        </div>
+        <div class="category-card" data-category="cases">
+          <div class="category-icon">📊</div>
+          <div class="category-name">Casos</div>
+          <div class="category-count" id="cases-count">0 documentos</div>
+        </div>
+        <div class="category-card" data-category="questions">
+          <div class="category-icon">❓</div>
+          <div class="category-name">Perguntas</div>
+          <div class="category-count" id="questions-count">0 documentos</div>
+        </div>
+      </div>
+
+      <div class="documents-list" id="documentsList">
+        <!-- Documents will be populated here -->
       </div>
     </div>
   </div>
